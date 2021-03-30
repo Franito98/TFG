@@ -10,6 +10,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -28,16 +29,20 @@ public class Consentimientos implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE)
-	@Column(name = "datos", nullable = false)
+	@SequenceGenerator(name="seqgen",sequenceName="MY_SEQ_GEN",initialValue=1, allocationSize=1)
+	@GeneratedValue(strategy= GenerationType.SEQUENCE, generator="seqgen")
+	@Column(name = "id", unique = true, nullable = false)
+	private Integer id;
+	
+	@Column(name = "datos", unique = false, nullable = false)
 	private String datos;
 	
 	@ManyToOne
-	@JoinColumn(name="contrasol")
+	@JoinColumn(name="contra")
 	private Agentes agentes;
 	
 	@ManyToOne
-	@JoinColumn(name="dnidest")
+	@JoinColumn(name="dni")
 	private Ciudadanos ciudadanos;
 	
 	@Column(name = "usu_datos", nullable = false)
@@ -64,7 +69,7 @@ public class Consentimientos implements java.io.Serializable {
 	@Column(name = "estado", nullable = false)
 	private String estado;
 	
-	@Column(name = "alerta")
+	@Column(name = "alerta", nullable = false)
 	private Boolean alerta;
 
 	public Consentimientos() {

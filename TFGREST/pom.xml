@@ -62,7 +62,13 @@
     	<artifactId>hapi-fhir-structures-r4</artifactId>
     	<version>5.1.0</version>
 	</dependency>
-		
+		<!-- https://mvnrepository.com/artifact/ca.uhn.hapi.fhir/hapi-fhir-base -->
+	<dependency>
+    	<groupId>ca.uhn.hapi.fhir</groupId>
+    	<artifactId>hapi-fhir-base</artifactId>
+    	<version>5.1.0</version>
+	</dependency>
+	
 	</dependencies>
 
 	<build>

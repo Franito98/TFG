@@ -28,7 +28,7 @@ public class Ciudadanos implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "dni", unique = true, nullable = false)
 	private String dni;
 	
