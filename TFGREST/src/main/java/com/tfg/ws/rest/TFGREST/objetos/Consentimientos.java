@@ -33,18 +33,22 @@ public class Consentimientos implements java.io.Serializable {
 	@GeneratedValue(strategy= GenerationType.SEQUENCE, generator="seqgen")
 	@Column(name = "id", unique = true, nullable = false)
 	private Integer id;
-	
+	/*
 	@Column(name = "datos", unique = false, nullable = false)
 	private String datos;
-	
+	*/
 	@ManyToOne
-	@JoinColumn(name="contra")
+	@JoinColumn(name="dniag")
 	private Agentes agentes;
 	
 	@ManyToOne
-	@JoinColumn(name="dni")
+	@JoinColumn(name="dniciud")
 	private Ciudadanos ciudadanos;
 	
+	@Column(name = "id_consent", nullable = false)
+	private String idconsent;
+	
+	/*
 	@Column(name = "usu_datos", nullable = false)
 	private String usuDatos;
 	
@@ -71,10 +75,20 @@ public class Consentimientos implements java.io.Serializable {
 	
 	@Column(name = "alerta", nullable = false)
 	private Boolean alerta;
-
+*/
+	
 	public Consentimientos() {
 	}
-
+	
+	public Consentimientos(Agentes agentes, Ciudadanos ciudadanos, String idconsent) {
+		super();
+		this.agentes = agentes;
+		this.ciudadanos = ciudadanos;
+		this.idconsent = idconsent;
+	}
+	
+	
+/*
 	public Consentimientos(String datos, String usuDatos, String ubiDatos, String catDatos, String accion,
 			String motivo, String dur, String estado) {
 		this.datos = datos;
@@ -110,7 +124,7 @@ public class Consentimientos implements java.io.Serializable {
 	public void setDatos(String datos) {
 		this.datos = datos;
 	}
-
+*/
 	@JsonBackReference
 	public Agentes getAgentes() {
 		return this.agentes;
@@ -128,7 +142,33 @@ public class Consentimientos implements java.io.Serializable {
 	public void setCiudadanos(Ciudadanos ciudadanos) {
 		this.ciudadanos = ciudadanos;
 	}
+	
+	public String getIdconsent() {
+		return idconsent;
+	}
+	public void setIdconsent(String idconsent) {
+		this.idconsent = idconsent;
+	}
 
+	@Override
+	public int hashCode() {
+		return Objects.hash(agentes, ciudadanos, idconsent);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Consentimientos other = (Consentimientos) obj;
+		return Objects.equals(agentes, other.agentes) && Objects.equals(ciudadanos, other.ciudadanos)
+				&& Objects.equals(idconsent, other.idconsent);
+	}
+	
+/*
 	public String getUsuDatos() {
 		return this.usuDatos;
 	}
@@ -223,5 +263,6 @@ public class Consentimientos implements java.io.Serializable {
 				&& Objects.equals(estado, other.estado) && Objects.equals(motivo, other.motivo)
 				&& Objects.equals(ubiDatos, other.ubiDatos) && Objects.equals(usuDatos, other.usuDatos);
 	}
-
+*/
+	
 }

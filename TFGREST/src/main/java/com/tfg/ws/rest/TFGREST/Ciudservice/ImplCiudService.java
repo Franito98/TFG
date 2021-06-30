@@ -1,17 +1,18 @@
 package com.tfg.ws.rest.TFGREST.Ciudservice;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
-import org.hl7.fhir.r4.model.CodeableConcept;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Consent;
 import org.hl7.fhir.r4.model.ContactPoint;
+import org.hl7.fhir.r4.model.Extension;
 import org.hl7.fhir.r4.model.ContactPoint.ContactPointSystem;
 import org.hl7.fhir.r4.model.ContactPoint.ContactPointUse;
 import org.hl7.fhir.r4.model.HumanName;
 import org.hl7.fhir.r4.model.Identifier;
-import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.UriType;
+import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
 import org.hl7.fhir.r4.model.Consent.ConsentState;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,12 +30,14 @@ import ca.uhn.fhir.model.primitive.StringDt;
 
 @Service
 public class ImplCiudService implements CiudService {
-
+	
 	@Autowired
 	private InterfazCiudDAO intCiudDAO;
 	
 	@Autowired
 	private InterfazConsentDAO intConsentDAO;
+
+	//private List<BundleEntryComponent> listentries;
 	
 	@Override
 	public Paciente accederCiud(String dni) {
@@ -123,6 +126,52 @@ public class ImplCiudService implements CiudService {
 	@Override
 	public List<Consen> getconsentestado(String dni, String estado) {
 		
+		List<Consentimientos> listaconsent = intConsentDAO.getidsconsent(dni);
+		
+		List<Consen> listaconsentimientos = new ArrayList<Consen>();
+		
+		List<Consent> listconsent = new ArrayList<Consent>();
+		
+		for(int i = 0; i<listaconsent.size(); i++) {
+		
+			Bundle response = intConsentDAO.getconsentC(listaconsent.get(i).getIdconsent());
+			BundleEntryComponent entry = response.getEntry().get(0);
+			
+			listconsent.add((Consent) entry.getResource());
+			
+		}
+		
+		for(int i = 0; i<listconsent.size(); i++) {
+			Consen consentimiento = new Consen();
+			
+			List<Extension> extension = listconsent.get(i).getExtension();
+			
+			if(listconsent.get(i).getStatus() == Consent.ConsentState.fromCode(estado)) {
+				consentimiento.setUsudatos(new StringDt(extension.get(0).getValueAsPrimitive().getValueAsString()));
+				consentimiento.setUbidatos(new StringDt(extension.get(1).getValueAsPrimitive().getValueAsString()));
+				consentimiento.setDatos(new StringDt(extension.get(2).getValueAsPrimitive().getValueAsString()));
+				consentimiento.setAccion(new StringDt(extension.get(3).getValueAsPrimitive().getValueAsString()));
+				consentimiento.setDuracion(new StringDt(extension.get(4).getValueAsPrimitive().getValueAsString()));
+				consentimiento.setCond(new StringDt(extension.get(5).getValueAsPrimitive().getValueAsString()));
+				if(extension.get(6).getValueAsPrimitive().getValue().equals(true)) {
+					consentimiento.setAviso(new BooleanDt(true));
+				} else {
+					consentimiento.setAviso(new BooleanDt(false));
+				}
+				consentimiento.setIdentifier(listconsent.get(i).getIdentifier());
+				consentimiento.setStatus(listconsent.get(i).getStatus());
+				consentimiento.setScope(listconsent.get(i).getScope());
+				consentimiento.setCategory(listconsent.get(i).getCategory());
+				consentimiento.setPatient(listconsent.get(i).getPatient());
+				consentimiento.setDateTime(listconsent.get(i).getDateTime());
+				
+				consentimiento.setId(listconsent.get(i).getId());
+				
+				listaconsentimientos.add(consentimiento);
+			}
+		}
+		
+		/*
 		List<Consentimientos> listconsent = intConsentDAO.getconsentestadoC(dni,estado);
 		List<Consen> listaconsentimientos = new ArrayList<Consen>();
 		
@@ -179,15 +228,21 @@ public class ImplCiudService implements CiudService {
 	        
 	        listaconsentimientos.add(consentimiento);
 		}
+		*/
 		return listaconsentimientos;
 	}
 	
 	@Override
 	public String modificarConsent(String estado, Consen consentimiento) {
 		String cod;
-		Integer row = intConsentDAO.modificarConsent(estado,consentimiento);
 		
-		if(row == 1) {
+		consentimiento.setStatus(ConsentState.fromCode(estado));
+		intConsentDAO.modificarConsent(consentimiento);
+		
+		Bundle response = intConsentDAO.getconsentC(consentimiento.getId());
+		Consent consen = (Consent) response.getEntry().get(0).getResource();
+		
+		if(consen.getStatus() == Consent.ConsentState.fromCode(estado)) {
 			cod = "{\n  \"codigo\": {\n  \"valueInteger\": 200\n  }\n}";
 		} else {
 			cod = "{\n  \"codigo\": {\n  \"valueInteger\": 400\n  }\n}";
@@ -197,10 +252,16 @@ public class ImplCiudService implements CiudService {
 	
 	@Override
 	public String actualizarAlerta(Consen consentimiento) {
-		String cod;
-		Integer row = intConsentDAO.actualizarAlerta(consentimiento);
 		
-		if(row == 1) {
+		String cod;
+		
+		consentimiento.setAviso(new BooleanDt(false));
+		intConsentDAO.actualizarAlerta(consentimiento);
+		
+		Bundle response = intConsentDAO.getconsentC(consentimiento.getId());
+		Consent consen = (Consent) response.getEntry().get(0).getResource();
+		
+		if(consen.getExtension().get(6).getValueAsPrimitive().getValue().equals(false)) {
 			cod = "{\n  \"codigo\": {\n  \"valueInteger\": 200\n  }\n}";
 		} else {
 			cod = "{\n  \"codigo\": {\n  \"valueInteger\": 400\n  }\n}";
@@ -211,9 +272,50 @@ public class ImplCiudService implements CiudService {
 	@Override
 	public List<Consen> getalertasCiud(String dni) {
 		
-		List<Consentimientos> listconsent = intConsentDAO.getalertas(dni);
+		List<Consentimientos> listaconsent = intConsentDAO.getidsconsent(dni);
 		List<Consen> listaconsentimientos = new ArrayList<Consen>();
 		
+		List<Consent> listconsent = new ArrayList<Consent>();
+		
+		for(int i = 0; i<listaconsent.size(); i++) {
+		
+			Bundle response = intConsentDAO.getconsentC(listaconsent.get(i).getIdconsent());
+			BundleEntryComponent entry = response.getEntry().get(0);
+			
+			listconsent.add((Consent) entry.getResource());
+			
+		}
+		
+		for(int i = 0; i<listconsent.size(); i++) {
+			Consen consentimiento = new Consen();
+			
+			List<Extension> extension = listconsent.get(i).getExtension();
+			
+			if(extension.get(6).getValueAsPrimitive().getValue().equals(true)) {
+				consentimiento.setUsudatos(new StringDt(extension.get(0).getValueAsPrimitive().getValueAsString()));
+				consentimiento.setUbidatos(new StringDt(extension.get(1).getValueAsPrimitive().getValueAsString()));
+				consentimiento.setDatos(new StringDt(extension.get(2).getValueAsPrimitive().getValueAsString()));
+				consentimiento.setAccion(new StringDt(extension.get(3).getValueAsPrimitive().getValueAsString()));
+				consentimiento.setDuracion(new StringDt(extension.get(4).getValueAsPrimitive().getValueAsString()));
+				consentimiento.setCond(new StringDt(extension.get(5).getValueAsPrimitive().getValueAsString()));
+				if(extension.get(6).getValueAsPrimitive().getValue().equals(true)) {
+					consentimiento.setAviso(new BooleanDt(true));
+				} else {
+					consentimiento.setAviso(new BooleanDt(false));
+				}
+				consentimiento.setIdentifier(listconsent.get(i).getIdentifier());
+				consentimiento.setStatus(listconsent.get(i).getStatus());
+				consentimiento.setScope(listconsent.get(i).getScope());
+				consentimiento.setCategory(listconsent.get(i).getCategory());
+				consentimiento.setPatient(listconsent.get(i).getPatient());
+				consentimiento.setDateTime(listconsent.get(i).getDateTime());
+				
+				consentimiento.setId(listconsent.get(i).getId());
+				
+				listaconsentimientos.add(consentimiento);
+			}
+		}
+		/*
 		for(int i = 0; i<listconsent.size(); i++) {
 			
 			Consen consentimiento = new Consen();
@@ -266,7 +368,7 @@ public class ImplCiudService implements CiudService {
 	        consentimiento.setAlerta(new BooleanDt(listconsent.get(i).getAlerta()));
 	        
 	        listaconsentimientos.add(consentimiento);
-		}
+		}*/
 		return listaconsentimientos;
 	}
 

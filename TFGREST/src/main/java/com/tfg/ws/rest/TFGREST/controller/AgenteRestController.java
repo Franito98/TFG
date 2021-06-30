@@ -52,10 +52,10 @@ public class AgenteRestController {
 		return agenteService.solconsent(contra, consen);
 	}
 	
-	@GetMapping("/{contra}")
-	public String getconsentestado(@PathVariable(value = "contra") String contra, @RequestParam(value = "estado") String estado){
+	@GetMapping("/{login}")
+	public String getconsentestado(@PathVariable(value = "login") String login, @RequestParam(value = "estado") String estado){
 		
-		List<Consen> listaconsentimientos = agenteService.getconsentestado(contra,estado);
+		List<Consen> listaconsentimientos = agenteService.getconsentestado(login,estado);
 		String lista = "{\n  \"consentimientos\": [\n\t";
 		int contador;
 		for(contador=0; contador<listaconsentimientos.size(); contador++) {

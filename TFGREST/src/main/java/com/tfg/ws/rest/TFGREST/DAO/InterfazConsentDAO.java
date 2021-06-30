@@ -2,22 +2,28 @@ package com.tfg.ws.rest.TFGREST.DAO;
 
 import java.util.List;
 
+import org.hl7.fhir.r4.model.Bundle;
+
 import com.tfg.ws.rest.TFGREST.RecursosExt.Consen;
 import com.tfg.ws.rest.TFGREST.objetos.Consentimientos;
+
+import ca.uhn.fhir.rest.api.MethodOutcome;
 
 public interface InterfazConsentDAO {
 
 	public void crearconsent(String contra, Consen consentimiento, String ciud);
 	
-	public List<Consentimientos> getconsentestadoA(String contra, String estado);
+	public Bundle getconsentA(String contra);
 	
-	public List<Consentimientos> getconsentestadoC(String dni, String estado);
+	public List<Consentimientos> getidsconsent(String dni);
 	
-	public Integer eliminarConsent(Consen consentimiento);
+	public Bundle getconsentC(String id);
+	
+	public MethodOutcome eliminarConsent(Consen consentimiento);
 
-	public Integer modificarConsent(String estado, Consen consentimiento);
+	public void modificarConsent(Consen consentimiento);
 	
-	public Integer actualizarAlerta(Consen consentimiento);
+	public void actualizarAlerta(Consen consentimiento);
 
 	public List<Consentimientos> getalertas(String dni);
 }

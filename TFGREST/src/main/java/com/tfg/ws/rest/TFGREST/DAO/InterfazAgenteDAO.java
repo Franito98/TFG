@@ -8,9 +8,7 @@ public interface InterfazAgenteDAO {
 	public Agentes accederAgente(String contra);
 	
 	public void actualizarAg(Practicante prac);
-	
-	
-	
-	public Boolean alertasAgente();
+
+	public String getDNI(String login);
 	
 }

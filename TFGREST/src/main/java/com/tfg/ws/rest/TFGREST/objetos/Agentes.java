@@ -32,6 +32,9 @@ public class Agentes implements java.io.Serializable {
 	@Column(name = "contra", unique = true, nullable = false)
 	private String contra;
 
+	@Column(name = "dni", unique = true)
+	private String dni;
+	
 	@Column(name = "nombre")
 	private String nombre;
 
@@ -60,9 +63,10 @@ public class Agentes implements java.io.Serializable {
 		this.codigo = codigo;
 	}
 
-	public Agentes(String contra, String nombre, String usu, String hospital, String depart, String codigo,
+	public Agentes(String contra, String dni, String nombre, String usu, String hospital, String depart, String codigo,
 			Set<Consentimientos> consentimientoses) {
 		this.contra = contra;
+		this.dni = dni;
 		this.nombre = nombre;
 		this.usu = usu;
 		this.hospital = hospital;
@@ -79,6 +83,14 @@ public class Agentes implements java.io.Serializable {
 		this.contra = contra;
 	}
 
+	public String getDni() {
+		return dni;
+	}
+
+	public void setDni(String dni) {
+		this.dni = dni;
+	}
+	
 	public String getNombre() {
 		return this.nombre;
 	}

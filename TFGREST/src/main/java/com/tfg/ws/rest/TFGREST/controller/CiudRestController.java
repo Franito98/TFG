@@ -60,7 +60,7 @@ public class CiudRestController {
 	}
 	
 	@PutMapping("/consentimiento/modificar")
-	public String eliminarConsent(@RequestParam(value = "estado") String estado, @RequestBody String consentimiento){
+	public String modificarConsent(@RequestParam(value = "estado") String estado, @RequestBody String consentimiento){
 		
 		Consen consent = ctx.newJsonParser().setPrettyPrint(true).parseResource(Consen.class, consentimiento);
 		

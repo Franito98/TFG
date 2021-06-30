@@ -15,6 +15,13 @@ import org.springframework.stereotype.Repository;
 import com.tfg.ws.rest.TFGREST.RecursosExt.Paciente;
 import com.tfg.ws.rest.TFGREST.objetos.Ciudadanos;
 
+import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.context.PerformanceOptionsEnum;
+import ca.uhn.fhir.rest.api.EncodingEnum;
+import ca.uhn.fhir.rest.api.MethodOutcome;
+import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
+
 @Repository
 public class ImplCiudDAO implements InterfazCiudDAO {
 
@@ -22,6 +29,9 @@ public class ImplCiudDAO implements InterfazCiudDAO {
 	
 	@Autowired
 	private EntityManager entityManager;
+	
+	FhirContext ctx = FhirContext.forR4();
+	String serverBase = "http://hapi.fhir.org/baseR4";
 	
 	@Override
 	public Ciudadanos accederCiud(String dni) {
@@ -42,6 +52,25 @@ public class ImplCiudDAO implements InterfazCiudDAO {
 
 	@Override
 	public void actualizarCiud(Paciente paciente) {
+		
+		ctx.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
+		ctx.setPerformanceOptions(PerformanceOptionsEnum.DEFERRED_MODEL_SCANNING);
+		
+		IGenericClient client = ctx.newRestfulGenericClient(serverBase);
+		client.setPrettyPrint(true);
+		client.setEncoding(EncodingEnum.JSON);
+		
+		MethodOutcome outcome = client.create().resource(paciente).execute();
+		
+		if (outcome.getCreated() == true) {
+			LOGGER.setLevel(Level.WARNING);
+			LOGGER.warning(outcome.getId().toString());
+			LOGGER.warning("Creado");
+		} else {
+			LOGGER.setLevel(Level.WARNING);
+			LOGGER.warning("Error");
+		}
+		
 		Session currentSession = entityManager.unwrap(Session.class);
 	
 		Ciudadanos ciud = new Ciudadanos(paciente.getIdentifier().get(0).getId(),
