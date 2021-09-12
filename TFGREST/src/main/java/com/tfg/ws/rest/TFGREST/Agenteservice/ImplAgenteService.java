@@ -2,6 +2,8 @@ package com.tfg.ws.rest.TFGREST.Agenteservice;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
@@ -9,6 +11,8 @@ import org.hl7.fhir.r4.model.Consent;
 import org.hl7.fhir.r4.model.Extension;
 import org.hl7.fhir.r4.model.HumanName;
 import org.hl7.fhir.r4.model.Identifier;
+import org.hl7.fhir.r4.model.Organization;
+import org.hl7.fhir.r4.model.PractitionerRole;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.UriType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +25,7 @@ import com.tfg.ws.rest.TFGREST.RecursosExt.Consen;
 import com.tfg.ws.rest.TFGREST.RecursosExt.Practicante;
 import com.tfg.ws.rest.TFGREST.objetos.Agentes;
 import com.tfg.ws.rest.TFGREST.objetos.Ciudadanos;
+import com.tfg.ws.rest.TFGREST.objetos.Consentimientos;
 
 import ca.uhn.fhir.model.primitive.BooleanDt;
 import ca.uhn.fhir.model.primitive.IntegerDt;
@@ -40,54 +45,26 @@ public class ImplAgenteService implements AgenteService {
 	private InterfazConsentDAO intConsentDAO;
 	
 	@Override
-	public Practicante accederAgente(String contra) {
+	public String accederAgente(String contra) {
 		
 		Agentes agente = new Agentes();
 		agente = intAgenteDAO.accederAgente(contra);
-		Practicante prac = new Practicante();
+		String cod;
 		
 		if(agente == null) {
-			prac.setCodmensaje(new IntegerDt(400));
+			cod = "{\n  \"codigo\": 400\n}";
 		}
 		else {
 			if (agente.getUsu() == null) {
-				prac.setCodmensaje(new IntegerDt(300));
+				cod = "{\n  \"codigo\": 300\n}";
 			}
 			else {
 				
-				Identifier id = new Identifier();
-				id.setValue(agente.getContra());
-				id.setSystemElement(new UriType("http://localhost:8080/TFGREST/agente/" + agente.getDni()));
-				prac.addIdentifier(id);
-				
-				HumanName nombre = new HumanName();
-				nombre.setText(agente.getNombre());
-				prac.addName(nombre);
-				
-				StringDt usu = new StringDt();
-				usu.setValueAsString(agente.getUsu());
-				prac.setUsu(usu);
-				
-				StringDt contrasena = new StringDt();
-	            contrasena.setValueAsString(agente.getContra());
-	            prac.setContra(contrasena);
-	            
-				StringDt hosp = new StringDt();
-				hosp.setValueAsString(agente.getHospital());
-				prac.setHospital(hosp);
-				
-				StringDt depart = new StringDt();
-				depart.setValueAsString(agente.getDepart());
-				prac.setDepart(depart);
-				
-				StringDt cod = new StringDt();
-				cod.setValueAsString(agente.getCodigo());
-				prac.setCodigo(cod);
-				
-				prac.setCodmensaje(new IntegerDt(200));
+				cod = "{\n  \"codigo\": 200,  \n"
+						+ "\"usu\": " + agente.getUsu() + "\n}";
 			}
 		}
-		return prac;
+		return cod;
 	}
 
 	@Override
@@ -109,189 +86,170 @@ public class ImplAgenteService implements AgenteService {
 					cod = "{\n  \"codigo\": {\n  \"valueInteger\": 500\n  }\n}";
 				}
 				else {
-					if(!agente.getHospital().equals(prac.getHospital().getValue()) ||
-							!agente.getDepart().equals(prac.getDepart().getValue())) {
-						cod = "{\n  \"codigo\": {\n  \"valueInteger\": 600\n  }\n}";
+					Agentes ag = new Agentes(prac.getContra().getValue(),prac.getIdentifier().get(0).getId(),
+							prac.getNameFirstRep().getText(),prac.getUsu().getValue(),
+							agente.getHospital(),agente.getDepart(),
+							prac.getCodigo().getValue(), null);
+					intAgenteDAO.actualizarAg(prac,ag);
+						
+					agente = intAgenteDAO.accederAgente(contra);
+						
+					if(agente.getUsu() == prac.getUsu().getValue() &&
+							agente.getNombre() == prac.getNameFirstRep().getText() &&
+							agente.getCodigo() == prac.getCodigo().getValue()) {
+						
+						cod = "{\n  \"codigo\": {\n  \"valueInteger\": 300\n  }\n}";
 					}
 					else {
-						intAgenteDAO.actualizarAg(prac);
-						
-						agente = intAgenteDAO.accederAgente(contra);
-						
-						if(agente.getUsu() == prac.getUsu().getValue() &&
-								agente.getNombre() == prac.getNameFirstRep().getText() &&
-								agente.getHospital() == prac.getHospital().getValue() &&
-								agente.getDepart() == prac.getDepart().getValue() &&
-								agente.getCodigo() == prac.getCodigo().getValue()) {
-						
-							cod = "{\n  \"codigo\": {\n  \"valueInteger\": 300\n  }\n}";
-						}
-						else {
-							cod = "{\n  \"codigo\": {\n  \"valueInteger\": 100\n  }\n}";
-						}
+						cod = "{\n  \"codigo\": {\n  \"valueInteger\": 100\n  }\n}";
 					}
 				}
-			}
+			}		
 		}
 		return cod;
 	}
 	
 	@Override
-	public String solconsent(String contra, Consen consentimiento) {
+	public String reghospital(String contra, Organization hospital) {
+		
+		Agentes agente = new Agentes();
+		agente = intAgenteDAO.accederAgente(contra);
+		String cod;
+					
+		if(!agente.getHospital().equals(hospital.getName()))  {
+			cod = "{\n  \"codigo\": {\n  \"valueInteger\": 600\n  }\n}";
+			}
+			else {
+				intAgenteDAO.actualizarHospital(hospital);
+						
+				cod = "{\n  \"codigo\": {\n  \"valueInteger\": 200\n  }\n}";
+			}
+		return cod;
+	}
+	
+	@Override
+	public String regdepart(String contra, PractitionerRole depart) {
 		
 		Agentes agente = new Agentes();
 		agente = intAgenteDAO.accederAgente(contra);
 		String cod;
 		
-		if(!agente.getNombre().equals(consentimiento.getIdentifier().get(0).getId())) {
+		if(!agente.getDepart().equals(depart.getCodeFirstRep().getText()))  {
 			cod = "{\n  \"codigo\": {\n  \"valueInteger\": 600\n  }\n}";
+			}
+			else {
+				intAgenteDAO.actualizarDepart(depart);
+						
+				cod = "{\n  \"codigo\": {\n  \"valueInteger\": 200\n  }\n}";
+			}
+		
+		return cod;
+	}
+	@Override
+	public String solconsent(String login, Consen consentimiento) {
+		
+		Agentes agente = new Agentes();
+		agente = intAgenteDAO.getAgLogin(login);
+		String cod;
+		
+		Reference refprac = new Reference();
+        refprac.setReference("http://hapi.fhir.org/Practitioner");
+        refprac.setType("Practitioner");
+        refprac.setIdentifier(new Identifier().setValue(agente.getDni()));
+        consentimiento.addPerformer(refprac);
+        
+        Reference refubi = consentimiento.getOrganizationFirstRep();
+        refubi.setIdentifier(new Identifier().setValue(agente.getDni()));
+        consentimiento.addOrganization(refubi);
+        
+		Ciudadanos ciud = new Ciudadanos();
+			
+		if(consentimiento.getPatient().getReference().equals("todos")) {
+			List<Ciudadanos> listaciuds = intCiudDAO.obtenerciuds();
+			int contador = 0;
+			for(int i = 0; i<listaciuds.size(); i++) {
+			
+				Reference referencia = new Reference();
+		        referencia.setReference("http://hapi.fhir.org/Patient");
+		        referencia.setType("Patient");
+		        referencia.setIdentifier(new Identifier().setValue(listaciuds.get(i).getDni()));
+		            
+				consentimiento.setPatient(referencia);
+				intConsentDAO.crearconsent(agente.getContra(), consentimiento, listaciuds.get(i).getDni());
+				contador++;
+			}
+			if(contador != listaciuds.size()) {
+				cod = "{\n  \"codigo\": {\n  \"valueInteger\": 500\n  }\n}";
+			}
+			else {
+				cod = "{\n  \"codigo\": {\n  \"valueInteger\": 200\n  }\n}";
+			}
 		}
 		else {
-			Ciudadanos ciud = new Ciudadanos();
-			
-			if(consentimiento.getPatient().getReference().equals("todos")) {
-				List<Ciudadanos> listaciuds = intCiudDAO.obtenerciuds();
-				int contador = 0;
-				for(int i = 0; i<listaciuds.size(); i++) {
-					
-					Reference referencia = new Reference();
-		            referencia.setReference("http://hapi.fhir.org/Patient");
-		            referencia.setType("Patient");
-		            referencia.setIdentifier(new Identifier().setValue(listaciuds.get(i).getDni()));
-		            
-					consentimiento.setPatient(referencia);
-					intConsentDAO.crearconsent(contra, consentimiento, listaciuds.get(i).getDni());
-					contador++;
-				}
-				if(contador != listaciuds.size()) {
-					cod = "{\n  \"codigo\": {\n  \"valueInteger\": 500\n  }\n}";
+			ciud = intCiudDAO.accederCiud(consentimiento.getPatient().getIdentifier().getValue());
+				
+			if(ciud == null) {
+				cod = "{\n  \"codigo\": {\n  \"valueInteger\": 400\n  }\n}";
+			}
+			else {
+				if(ciud.getUsu() == null) {
+					cod = "{\n  \"codigo\": {\n  \"valueInteger\": 100\n  }\n}";
 				}
 				else {
+					intConsentDAO.crearconsent(agente.getContra(), consentimiento, ciud.getDni());
 					cod = "{\n  \"codigo\": {\n  \"valueInteger\": 200\n  }\n}";
 				}
 			}
-			else {
-				ciud = intCiudDAO.accederCiud(consentimiento.getPatient().getIdentifier().getValue());
-				
-				if(ciud == null) {
-					cod = "{\n  \"codigo\": {\n  \"valueInteger\": 400\n  }\n}";
-				}
-				else {
-					if(ciud.getUsu() == null) {
-						cod = "{\n  \"codigo\": {\n  \"valueInteger\": 100\n  }\n}";
-					}
-					else {
-						intConsentDAO.crearconsent(contra, consentimiento, ciud.getDni());
-						cod = "{\n  \"codigo\": {\n  \"valueInteger\": 200\n  }\n}";
-					}
-				}
-			}
 		}
-		
 		return cod;
 	}
 	
 	@Override
 	public List<Consen> getconsentestado(String login, String estado) {
-		
-		String dni = intAgenteDAO.getDNI(login);
-		Bundle response = intConsentDAO.getconsentA(dni);
+		String contra = intAgenteDAO.getAgLogin(login).getContra();
+		List<Consentimientos> listaconsent= intConsentDAO.getidsconsentA(contra);		
 		
 		List<Consen> listaconsentimientos = new ArrayList<Consen>();
 		
-		List<BundleEntryComponent> listentries = response.getEntry();
+		List<Consent> listconsent = new ArrayList<Consent>();
 		
-		for(int i = 0; i<listentries.size(); i++) {
-			BundleEntryComponent entry = listentries.get(i);
-			Consent consent = (Consent) entry.getResource();
+		for(int i = 0; i<listaconsent.size(); i++) {
+			Bundle response = intConsentDAO.getconsent(listaconsent.get(i).getIdconsent());
+			BundleEntryComponent entry = response.getEntry().get(0);
+			
+			listconsent.add((Consent) entry.getResource());
+			
+		}
+		
+		for(int i = 0; i<listconsent.size(); i++) {
 			Consen consentimiento = new Consen();
 			
-			List<Extension> extension = consent.getExtension();
+			List<Extension> extension = listconsent.get(i).getExtension();
 			
-			if(consent.getStatus() == Consent.ConsentState.fromCode(estado)) {
-				consentimiento.setUsudatos(new StringDt(extension.get(0).getValueAsPrimitive().getValueAsString()));
-				consentimiento.setUbidatos(new StringDt(extension.get(1).getValueAsPrimitive().getValueAsString()));
-				consentimiento.setDatos(new StringDt(extension.get(2).getValueAsPrimitive().getValueAsString()));
-				consentimiento.setAccion(new StringDt(extension.get(3).getValueAsPrimitive().getValueAsString()));
-				consentimiento.setDuracion(new StringDt(extension.get(4).getValueAsPrimitive().getValueAsString()));
-				consentimiento.setCond(new StringDt(extension.get(5).getValueAsPrimitive().getValueAsString()));
-				if(extension.get(6).getValueAsPrimitive().getValueAsString().equals(true)) {
+			if(listconsent.get(i).getStatus() == Consent.ConsentState.fromCode(estado)) {
+				consentimiento.setDatos(new StringDt(extension.get(0).getValueAsPrimitive().getValueAsString()));
+				consentimiento.setDuracion(new StringDt(extension.get(1).getValueAsPrimitive().getValueAsString()));
+				consentimiento.setCond(new StringDt(extension.get(2).getValueAsPrimitive().getValueAsString()));
+				if(extension.get(3).getValueAsPrimitive().getValueAsString().equals(true)) {
 					consentimiento.setAviso(new BooleanDt(true));
 				} else {
 					consentimiento.setAviso(new BooleanDt(false));
 				}
-				consentimiento.setIdentifier(consent.getIdentifier());
-				consentimiento.setStatus(consent.getStatus());
-				consentimiento.setScope(consent.getScope());
-				consentimiento.setCategory(consent.getCategory());
-				consentimiento.setPatient(consent.getPatient());
-				consentimiento.setDateTime(consent.getDateTime());
+				consentimiento.addOrganization(listconsent.get(i).getOrganizationFirstRep());
+				consentimiento.addPerformer(listconsent.get(i).getPerformerFirstRep());
+				consentimiento.setProvision(listconsent.get(i).getProvision());
+				consentimiento.setStatus(listconsent.get(i).getStatus());
+				consentimiento.setScope(listconsent.get(i).getScope());
+				consentimiento.setCategory(listconsent.get(i).getCategory());
+				consentimiento.setPatient(listconsent.get(i).getPatient());
+				consentimiento.setDateTime(listconsent.get(i).getDateTime());
 				
-				consentimiento.setId(consent.getId());
+				consentimiento.setId(listconsent.get(i).getId());
 				
 				listaconsentimientos.add(consentimiento);
 			}
 		}
 		
-		
-		/*
-		List<Consentimientos> listconsent = intConsentDAO.getconsentestadoA(contra,estado);
-		List<Consen> listaconsentimientos = new ArrayList<Consen>();
-		
-		for(int i = 0; i<listconsent.size(); i++) {
-			
-			Consen consentimiento = new Consen();
-			
-			Identifier id = new Identifier();
-	        id.setId(listconsent.get(i).getAgentes().getContra());
-	        id.setSystemElement(new UriType("http://localhost:8080/TFGREST/consentimiento/" + contra));
-	        consentimiento.addIdentifier(id);
-
-	        consentimiento.addPerformer(new Reference().setReference(listconsent.get(i).getUsuDatos()));
-
-	        consentimiento.addOrganization(new Reference().setReference(listconsent.get(i).getUbiDatos()));
-
-	        consentimiento.addCategory().setText(listconsent.get(i).getCatDatos());
-
-	        StringDt datos = new StringDt();
-	        datos.setValueAsString(listconsent.get(i).getDatos());
-	        consentimiento.setDatos(datos);
-
-	        StringDt accion = new StringDt();
-	        accion.setValueAsString(listconsent.get(i).getAccion());
-	        consentimiento.setAccion(accion);
-
-	        consentimiento.setPatient(new Reference().setReference(listconsent.get(i).getCiudadanos().getDni()));
-
-	        consentimiento.setScope(new CodeableConcept().setText(listconsent.get(i).getMotivo()));
-
-	        consentimiento.setDateTime(new Date());
-	        StringDt dur = new StringDt();
-	        dur.setValueAsString(listconsent.get(i).getDur());
-	        consentimiento.setDuracion(dur);
-
-	        StringDt cond = new StringDt();
-	        cond.setValueAsString(listconsent.get(i).getCond());
-	        consentimiento.setCond(cond);
-
-	        if(listconsent.get(i).getEstado().equals("draft")) {
-	        	consentimiento.setStatus(ConsentState.DRAFT);
-	        }
-	        else {
-	        	if(listconsent.get(i).getEstado().equals("rejected")) {
-	        		consentimiento.setStatus(ConsentState.REJECTED);
-	        	}
-	        	else {
-	        		if(listconsent.get(i).getEstado().equals("active")) {
-		        		consentimiento.setStatus(ConsentState.ACTIVE);
-	        		}
-	        	}
-	        }
-	        consentimiento.setAlerta(new BooleanDt(listconsent.get(i).getAlerta()));
-	        
-	        listaconsentimientos.add(consentimiento);
-		}
-		*/
 		return listaconsentimientos;
 	}
 	
@@ -309,8 +267,11 @@ public class ImplAgenteService implements AgenteService {
 	}
 	
 	@Override
-	public Boolean alertasAgente(String usu, String contra) {
-		return null;
+	public String getHospital(String login) {
+		
+		String hospital = "{\n  \"hospital\": "+intAgenteDAO.getAgLogin(login).getHospital()+"\n}";
+		
+		return hospital;
 	}
 
 }

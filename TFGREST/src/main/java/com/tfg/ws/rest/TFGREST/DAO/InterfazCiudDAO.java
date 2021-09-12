@@ -9,10 +9,8 @@ public interface InterfazCiudDAO {
 
 	public Ciudadanos accederCiud(String dni);
 	
-	public void actualizarCiud(Paciente paciente);
+	public void actualizarCiud(Paciente paciente, Ciudadanos ciud);
 	
 	public List<Ciudadanos> obtenerciuds();
-	
-	public void alertasCiud(Ciudadanos ciud);
 	
 }

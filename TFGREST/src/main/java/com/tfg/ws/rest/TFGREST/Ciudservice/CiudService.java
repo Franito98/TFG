@@ -2,12 +2,15 @@ package com.tfg.ws.rest.TFGREST.Ciudservice;
 
 import java.util.List;
 
+import org.hl7.fhir.r4.model.Organization;
+
 import com.tfg.ws.rest.TFGREST.RecursosExt.Consen;
 import com.tfg.ws.rest.TFGREST.RecursosExt.Paciente;
+import com.tfg.ws.rest.TFGREST.objetos.Agentes;
 	
 public interface CiudService {
 		
-	public Paciente accederCiud(String dni);
+	public String accederCiud(String dni);
 	
 	public String regCiud(String dni, Paciente paciente);
 	
@@ -15,7 +18,11 @@ public interface CiudService {
 	
 	public String modificarConsent(String estado, Consen consent);
 	
-	public String actualizarAlerta(Consen consentimiento);
+	public String actualizarAviso(Consen consentimiento);
 	
-	public List<Consen> getalertasCiud(String dni);
+	public List<Consen> getavisosCiud(String dni);
+
+	public String getHospital(String dni);
+
+	public Agentes getNombre(String dni);
 }

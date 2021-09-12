@@ -38,7 +38,7 @@ public class Consentimientos implements java.io.Serializable {
 	private String datos;
 	*/
 	@ManyToOne
-	@JoinColumn(name="dniag")
+	@JoinColumn(name="contraag")
 	private Agentes agentes;
 	
 	@ManyToOne

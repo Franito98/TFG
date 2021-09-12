@@ -13,6 +13,7 @@ import org.hibernate.query.Query;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Consent;
 import org.hl7.fhir.r4.model.IdType;
+import org.hl7.fhir.r4.model.Organization;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -40,7 +41,7 @@ public class ImplConsentDAO implements InterfazConsentDAO {
 	String serverBase = "http://hapi.fhir.org/baseR4";
 	
 	@Override
-	public void crearconsent(String contra, Consen consentimiento, String ciud) {
+	public void crearconsent(String agdni, Consen consentimiento, String ciuddni) {
 
 		ctx.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
 		ctx.setPerformanceOptions(PerformanceOptionsEnum.DEFERRED_MODEL_SCANNING);
@@ -63,46 +64,11 @@ public class ImplConsentDAO implements InterfazConsentDAO {
 		Session currentSession = entityManager.unwrap(Session.class);
 		
 		Agentes agente = new Agentes();
-		agente.setContra(contra);
+		agente.setContra(agdni);
 		Ciudadanos ciudadano = new Ciudadanos();
-		ciudadano.setDni(ciud);
+		ciudadano.setDni(ciuddni);
 		
 		Consentimientos consent = new Consentimientos(agente,ciudadano,outcome.getId().getIdPart());
-		/*
-		Consentimientos consent = new Consentimientos(consentimiento.getDatos().getValue(), 
-				agente, ciudadano, consentimiento.getPerformerFirstRep().getReference().toString(), 
-				consentimiento.getOrganizationFirstRep().getReference().toString(), consentimiento.getCategoryFirstRep().getText().toString(), 
-				consentimiento.getAccion().getValue(), consentimiento.getScope().getText(), 
-				consentimiento.getDuracion().getValue(), consentimiento.getCond().getValue(),
-				consentimiento.getStatus().toCode(), consentimiento.getAlerta().getValue());
-		*/
-		Transaction t = currentSession.beginTransaction();
-		try {	
-			currentSession.save("Consentimientos", consent);
-			t.commit();
-		} catch (HibernateException exc){
-			t.rollback();
-			LOGGER.setLevel(Level.WARNING);
-			LOGGER.warning(exc.toString());
-		} finally {
-			entityManager.close();
-		}
-		
-		/*
-		//Parte de Hibernate anterior
-		Session currentSession = entityManager.unwrap(Session.class);
-	
-		Agentes agente = new Agentes();
-		agente.setContra(contra);
-		Ciudadanos ciudadano = new Ciudadanos();
-		ciudadano.setDni(ciud);
-		
-		Consentimientos consent = new Consentimientos(consentimiento.getDatos().getValue(), 
-				agente, ciudadano, consentimiento.getPerformerFirstRep().getReference().toString(), 
-				consentimiento.getOrganizationFirstRep().getReference().toString(), consentimiento.getCategoryFirstRep().getText().toString(), 
-				consentimiento.getAccion().getValue(), consentimiento.getScope().getText(), 
-				consentimiento.getDuracion().getValue(), consentimiento.getCond().getValue(),
-				consentimiento.getStatus().toCode(), consentimiento.getAlerta().getValue());
 		
 		Transaction t = currentSession.beginTransaction();
 		try {	
@@ -115,12 +81,9 @@ public class ImplConsentDAO implements InterfazConsentDAO {
 		} finally {
 			entityManager.close();
 		}
-		*/
 	}
 	
-	public Bundle getconsentA(String dni){
-		
-		//List<Consentimientos> listaconsent = null;
+	public Bundle getconsent(String id){
 		
 		ctx.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
 		ctx.setPerformanceOptions(PerformanceOptionsEnum.DEFERRED_MODEL_SCANNING);
@@ -129,36 +92,14 @@ public class ImplConsentDAO implements InterfazConsentDAO {
 		client.setPrettyPrint(true);
 		client.setEncoding(EncodingEnum.JSON);
 		
+
 		Bundle response = client.search().forResource(Consent.class)
-				.where(Consent.IDENTIFIER.hasSystemWithAnyCode("http://localhost:8080/TFGREST/consentimiento/"+dni))
-				.returnBundle(Bundle.class).execute();
+				.where(Consent.RES_ID.exactly().identifier(id)).returnBundle(Bundle.class).execute();
 		
-		/*
-		Session currentSession = entityManager.unwrap(Session.class);
-		List<Consentimientos> listaconsent = null;
-		Transaction t = currentSession.beginTransaction();
-		
-		try {
-			Query<Consentimientos> query = currentSession.createQuery("from Consentimientos C where C.agentes.contra= :contra "
-					+ "and C.estado= :estado", Consentimientos.class);
-			
-			query.setParameter("contra", contra);
-			query.setParameter("estado", estado);
-					
-			listaconsent = query.list();	
-			
-			t.commit();
-		} catch (HibernateException exc){
-			t.rollback();
-			LOGGER.setLevel(Level.WARNING);
-			LOGGER.warning("Error al obtener los consentimientos");
-		} finally {
-			entityManager.close();
-		}*/
 		return response;
 	}
-	
-	public List<Consentimientos> getidsconsent(String dni) {
+
+	public List<Consentimientos> getidsconsentC(String dni) {
 		
 		Session currentSession = entityManager.unwrap(Session.class);
 		List<Consentimientos> listaconsent = null;
@@ -183,46 +124,6 @@ public class ImplConsentDAO implements InterfazConsentDAO {
 		return listaconsent;
 	}
 	
-	public Bundle getconsentC(String id){
-		
-		ctx.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
-		ctx.setPerformanceOptions(PerformanceOptionsEnum.DEFERRED_MODEL_SCANNING);
-		
-		IGenericClient client = ctx.newRestfulGenericClient(serverBase);
-		client.setPrettyPrint(true);
-		client.setEncoding(EncodingEnum.JSON);
-		
-		Bundle response = client.search().forResource(Consent.class)
-				.where(Consent.RES_ID.exactly().identifier(id)).returnBundle(Bundle.class).execute();
-		
-		LOGGER.setLevel(Level.WARNING);
-		LOGGER.warning(response.getEntry().toString());
-		/*
-		Session currentSession = entityManager.unwrap(Session.class);
-		List<Consentimientos> listaconsent = null;
-		Transaction t = currentSession.beginTransaction();
-		
-		try {
-			Query<Consentimientos> query = currentSession.createQuery("from Consentimientos C where C.ciudadanos.dni= :dni "
-					+ "and C.estado= :estado", Consentimientos.class);
-			
-			query.setParameter("dni", dni);
-			query.setParameter("estado", estado);
-					
-			listaconsent = query.list();	
-			
-			t.commit();
-		} catch (HibernateException exc){
-			t.rollback();
-			LOGGER.setLevel(Level.WARNING);
-			LOGGER.warning("Error al obtener los consentimientos");
-		} finally {
-			entityManager.close();
-		}
-		*/
-		return response;
-	}
-	
 	@Override
 	public MethodOutcome eliminarConsent(Consen consentimiento) {
 		
@@ -241,10 +142,7 @@ public class ImplConsentDAO implements InterfazConsentDAO {
 		
 		try {	
 			@SuppressWarnings("rawtypes")
-			Query query = currentSession.createQuery("delete from Consentimientos C where C.agentes.contra= :contra "
-					+ "and C.ciudadanos.dni= :dest" + " and C.id_consent= :id_consent");
-			query.setParameter("contra", consentimiento.getIdentifier().get(0).getValue());
-			query.setParameter("dest", consentimiento.getPatient().getIdentifier().getValue());
+			Query query = currentSession.createQuery("delete from Consentimientos C where C.idconsent= :id_consent");
 			query.setParameter("id_consent", consentimiento.getId().substring(8));
 			
 			query.executeUpdate();
@@ -273,38 +171,10 @@ public class ImplConsentDAO implements InterfazConsentDAO {
 		
 		MethodOutcome outcome = client.update().resource(consentimiento).execute();
 		
-		/*
-		Session currentSession = entityManager.unwrap(Session.class);
-		
-		Integer row;
-		
-		Transaction t = currentSession.beginTransaction();
-		try {	
-			@SuppressWarnings("rawtypes")
-			Query query = currentSession.createQuery("update Consentimientos C set estado= :estado where C.agentes.contra= :contra "
-					+ "and C.ciudadanos.dni= :dest" + " and C.usuDatos= :usudatos" + " and C.datos= :datos");
-			query.setParameter("contra", consentimiento.getIdentifier().get(0).getId());
-			query.setParameter("dest", consentimiento.getPatient().getReference());
-			query.setParameter("usudatos", consentimiento.getPerformerFirstRep().getReference());
-			query.setParameter("datos", consentimiento.getDatos().getValue());
-			query.setParameter("estado", estado);
-			row = query.executeUpdate();
-			
-			t.commit();
-		} catch (HibernateException exc){
-			t.rollback();
-			LOGGER.setLevel(Level.WARNING);
-			LOGGER.warning(exc.toString());
-			row = 0;
-		} finally {
-			entityManager.close();
-		}
-		return row;
-		*/
 	}
 	
 	@Override
-	public void actualizarAlerta(Consen consentimiento) {
+	public void actualizarAviso(Consen consentimiento) {
 		
 		ctx.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
 		ctx.setPerformanceOptions(PerformanceOptionsEnum.DEFERRED_MODEL_SCANNING);
@@ -343,7 +213,7 @@ public class ImplConsentDAO implements InterfazConsentDAO {
 		}
 		*/
 	}
-	
+	/*
 	@Override
 	public List<Consentimientos> getalertas(String dni){
 		
@@ -368,6 +238,32 @@ public class ImplConsentDAO implements InterfazConsentDAO {
 		} finally {
 			entityManager.close();
 		}
+		return listaconsent;
+	}
+*/
+	@Override
+	public List<Consentimientos> getidsconsentA(String contra) {
+		Session currentSession = entityManager.unwrap(Session.class);
+		List<Consentimientos> listaconsent = null;
+		Transaction t = currentSession.beginTransaction();
+		
+		try {
+			Query<Consentimientos> query = currentSession.createQuery("from Consentimientos C where C.agentes.contra= :contra "
+					, Consentimientos.class);
+			
+			query.setParameter("contra", contra);
+					
+			listaconsent = query.list();	
+			
+			t.commit();
+		} catch (HibernateException exc){
+			t.rollback();
+			LOGGER.setLevel(Level.WARNING);
+			LOGGER.warning("Error al obtener los consentimientos");
+		} finally {
+			entityManager.close();
+		}
+		
 		return listaconsent;
 	}
 }

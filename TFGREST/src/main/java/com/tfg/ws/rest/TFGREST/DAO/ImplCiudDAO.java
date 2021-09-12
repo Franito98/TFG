@@ -51,7 +51,7 @@ public class ImplCiudDAO implements InterfazCiudDAO {
 	}
 
 	@Override
-	public void actualizarCiud(Paciente paciente) {
+	public void actualizarCiud(Paciente paciente, Ciudadanos ciud) {
 		
 		ctx.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
 		ctx.setPerformanceOptions(PerformanceOptionsEnum.DEFERRED_MODEL_SCANNING);
@@ -72,12 +72,6 @@ public class ImplCiudDAO implements InterfazCiudDAO {
 		}
 		
 		Session currentSession = entityManager.unwrap(Session.class);
-	
-		Ciudadanos ciud = new Ciudadanos(paciente.getIdentifier().get(0).getId(),
-				paciente.getNameFirstRep().getText(),paciente.getUsu().getValue(),
-				paciente.getTarjsanitaria().getValue(),Integer.valueOf(paciente.getTelecom().get(0).getValue()),
-				null);
-		
 		Transaction t = currentSession.beginTransaction();
 		try {	
 			currentSession.merge("Ciudadanos", ciud);
@@ -113,16 +107,6 @@ public class ImplCiudDAO implements InterfazCiudDAO {
 			entityManager.close();
 		}
 		return listaciuds;
-	}
-	
-	@Override
-	public void alertasCiud(Ciudadanos ciud) {
-		// TODO Auto-generated method stub
-		Session currentSession = entityManager.unwrap(Session.class);
-		
-		currentSession.evict(ciud);
-		
-		//return null;
 	}
 
 }

@@ -19,20 +19,22 @@ public class Consen extends Consent {
 
 	private static final long serialVersionUID = 1L;
 
-    /** * This is a basic extension, with a DataType value (in this case, StringDt) */
+	/*
+    /** * This is a basic extension, with a DataType value (in this case, StringDt) 
     //Atributo extendido Usudatos
     @Child(name = "usudatos")
     @Description(shortDefinition = "Indica el agente que usará los datos")
     @Extension(url = "localhost:8080/extensión/consent/usudatos", isModifier = false, definedLocally = true)
     private StringDt usudatos;
     
-    /** * This is a basic extension, with a DataType value (in this case, StringDt) */
+    /** * This is a basic extension, with a DataType value (in this case, StringDt) 
     //Atributo extendido Ubidatos
     @Child(name = "ubidatos")
     @Description(shortDefinition = "Indica la ubicación donde se encuentran los satos")
     @Extension(url = "localhost:8080/extensión/consent/ubidatos", isModifier = false, definedLocally = true)
     private StringDt ubidatos;
-    
+    */
+	
 	/** * This is a basic extension, with a DataType value (in this case, StringDt) */ 
 	//Atributo extendido Datos
 	@Child(name = "datos") 
@@ -40,12 +42,14 @@ public class Consen extends Consent {
 	@Extension(url = "localhost:8080/extensión/consent/datos", isModifier = false, definedLocally = true) 
 	private StringDt datos;
 
-	/** * This is a basic extension, with a DataType value (in this case, StringDt) */ 
+	/*
+	/** * This is a basic extension, with a DataType value (in this case, StringDt)
 	//Atributo extendido Acción
 	@Child(name = "accion")
 	@Description(shortDefinition = "Indica qué hacer con los datos") 
 	@Extension(url = "localhost:8080/extensión/consent/accion", isModifier = false, definedLocally = true) 
 	private StringDt accion;
+	*/
 	
 	/** * This is a basic extension, with a DataType value (in this case, StringDt) */ 
 	//Atributo extendido Duración
@@ -68,6 +72,7 @@ public class Consen extends Consent {
 	@Extension(url = "localhost:8080/extensión/consent/aviso", isModifier = false, definedLocally = true) 
 	private BooleanDt aviso;
 
+	/*
 	public StringDt getUsudatos() {
 		return usudatos;
 	}
@@ -83,6 +88,7 @@ public class Consen extends Consent {
 	public void setUbidatos(StringDt ubidatos) {
 		this.ubidatos = ubidatos;
 	}
+	*/
 	
 	public StringDt getDatos() {
 		return datos;
@@ -92,6 +98,7 @@ public class Consen extends Consent {
 		this.datos = datos;
 	}
 
+	/*
 	public StringDt getAccion() {
 		return accion;
 	}
@@ -99,6 +106,7 @@ public class Consen extends Consent {
 	public void setAccion(StringDt accion) {
 		this.accion = accion;
 	}
+	*/
 
 	public StringDt getDuracion() {
 		return duracion;

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.tfg.ws.rest.TFGREST.Ciudservice.CiudService;
 import com.tfg.ws.rest.TFGREST.RecursosExt.Consen;
 import com.tfg.ws.rest.TFGREST.RecursosExt.Paciente;
+import com.tfg.ws.rest.TFGREST.objetos.Agentes;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.context.FhirVersionEnum;
@@ -30,8 +31,9 @@ public class CiudRestController {
 	@GetMapping("/acceder")
 	public String accederCiud(@RequestParam(value = "dni") String dni){
 		
-		return ctx.newJsonParser().setPrettyPrint(true).
-				encodeResourceToString(ciudService.accederCiud(dni));
+		//return ctx.newJsonParser().setPrettyPrint(true).
+				//encodeResourceToString(ciudService.accederCiud(dni));
+		return ciudService.accederCiud(dni);
 	}
 	
 	@PutMapping("/reg/{dni}")
@@ -68,17 +70,17 @@ public class CiudRestController {
 	}
 	
 	@PutMapping("/consentimiento/actualizaralerta")
-	public String actualizarAlerta(@RequestBody String consentimiento){
+	public String actualizarAviso(@RequestBody String consentimiento){
 		
 		Consen consent = ctx.newJsonParser().setPrettyPrint(true).parseResource(Consen.class, consentimiento);
 		
-		return ciudService.actualizarAlerta(consent);
+		return ciudService.actualizarAviso(consent);
 	}
 	
 	@GetMapping("/{dni}/alertas")
-	public String getconsentAlertas(@PathVariable(value = "dni") String dni){
+	public String getconsentAvisos(@PathVariable(value = "dni") String dni){
 		
-		List<Consen> listaconsentimientos = ciudService.getalertasCiud(dni);
+		List<Consen> listaconsentimientos = ciudService.getavisosCiud(dni);
 		String lista = "{\n  \"consentimientos\": [\n\t";
 		int contador;
 		for(contador=0; contador<listaconsentimientos.size(); contador++) {
@@ -89,5 +91,17 @@ public class CiudRestController {
 		}
 		lista = lista + "\n\t]\n}";
 		return lista;
+	}
+	
+	@GetMapping("/hospital/{dni}")
+	public String gethospital(@PathVariable(value = "dni") String dni){
+		
+		return ciudService.getHospital(dni);
+	}
+	
+	@GetMapping("/solicitante")
+	public Agentes getNombreAg(@RequestParam(value = "dni") String dni){
+		
+		return ciudService.getNombre(dni);
 	}
 }
